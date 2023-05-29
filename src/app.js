@@ -1,20 +1,19 @@
+const https = require("https");
 const express = require("express");
 const bodyParser = require("body-parser");
-const https = require("https");
-const app = express();
-const Calculator = require("./services/calculator");
-
+const Cities = require("./services/cities");
 const bearerMW = require("./middlewares/bearer");
-
-const citiesMap = new Map();
-const cityTags = new Map();
-const calculator = new Calculator();
 
 const endpoint =
   "https://raw.githubusercontent.com/gandevops/backend-code-challenge/master/addresses.json";
+const app = express();
+const citiesMap = new Map();
+const cityTags = new Map();
+const cities = new Cities(endpoint);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bearerMW);
 
 // load all cities to memory
 https.get(endpoint, (response) => {
@@ -37,38 +36,14 @@ https.get(endpoint, (response) => {
   });
 });
 
-app.get("/ping", (req, res) => {
-  res.status(200).send("pong " + Date());
-});
-
-app.use(bearerMW);
-
 app.get("/cities-by-tag", (req, res) => {
   const { tag, isActive } = req.query;
-  if (!cityTags.has(tag)) {
-    res.status(404).json({ error: "cannot find tag: " + tag });
-    return;
-  }
-  const ids = cityTags.get(tag);
-  const result = ids
-    .map((i) => {
-      return citiesMap.get(i);
-    })
-    .filter((v) => {
-      return v.isActive + "" === isActive;
-    });
-  res.status(200).json({ cities: result });
+  return cities.getByTag(res, tag, isActive);
 });
+
 app.get("/distance", (req, res) => {
   const { from, to } = req.query;
-  const fromCity = citiesMap.get(from);
-  const toCity = citiesMap.get(to);
-  const result = calculator.distance(
-    fromCity.latitude,
-    toCity.latitude,
-    fromCity.longitude,
-    toCity.longitude
-  );
+  const result = cities.calculateDistance(from, to);
   res.status(200).json({
     from: {
       guid: from,
@@ -81,27 +56,35 @@ app.get("/distance", (req, res) => {
   });
 });
 
-app.get("/area", (req, res) => {});
+app.get("/area", (req, res) => {
+  const { from, distance } = req.query;
+
+  // this should be auto-generated
+  let requestID = "2152f96f-50c7-4d76-9e18-f7033bd14428";
+
+  const resultURL = `${req.protocol}://${req.header(
+    "host"
+  )}/area-result/${requestID}`;
+  res.status(202).send({
+    resultsUrl: resultURL,
+    message: "request recieved and processing",
+  });
+  console.log("child process triggered");
+  cities.citiesByDistance(from, distance, requestID);
+});
 
 app.get("/area-result/:id", (req, res) => {
-  // let id = '2152f96f-50c7-4d76-9e18-f7033bd14428';
   const id = req.params.id;
+  const result = cities.distanceResponse(id);
+  if (result === "pending") {
+    res.status(202).send({ message: "pending" });
+    return;
+  }
+  res.status(200).send({ cities: result });
 });
 
 app.get("/all-cities", (req, res) => {
-  res.write('[');
-  let i = 0;
-  const mapSize = citiesMap.size;
-  citiesMap.forEach(v=>{
-    if(mapSize-i > 1 ){
-        res.write(JSON.stringify(v)+',\n');
-    }else {
-        res.write(JSON.stringify(v));
-    }
-    i++;
-  });
-  res.write(']');
-  res.status(200).end();
+  return cities.allCities(res);
 });
 
 module.exports = app;
