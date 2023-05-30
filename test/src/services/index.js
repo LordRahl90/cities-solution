@@ -1,1 +1,1 @@
-module.exports = require('./calculator');
+module.exports = require("./calculator");

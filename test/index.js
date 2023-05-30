@@ -1,2 +1,2 @@
-require('./src/services/calculator');
-require('./src/app');
+require("./src/services/calculator");
+require("./src/app");

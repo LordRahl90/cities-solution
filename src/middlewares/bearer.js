@@ -12,7 +12,7 @@ const bearer = (req, res, next) => {
   try {
     atob(auth[1]);
   } catch (e) {
-    res.status(401).json({error: e.message});
+    res.status(401).json({ error: e.message });
     return;
   }
   next();
