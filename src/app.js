@@ -16,6 +16,7 @@ app.use(bearerMW);
 
 app.get("/cities-by-tag", (req, res) => {
   const { tag, isActive } = req.query;
+  console.log('loading');
   return cities.getByTag(res, tag, isActive);
 });
 
