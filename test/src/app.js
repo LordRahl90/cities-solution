@@ -24,16 +24,15 @@ describe('integration tests', ()=>{
         });
     });
 
-    it('should return cities with token', ()=>{
+   it('should return result-url',()=>{
         request(app)
-        .get('/cities-by-tag?tag=excepteurus&isActive=true')
+        .get('/area?from=ed354fef-31d3-44a9-b92f-4a3bd7eb0408&distance=250')
         .set('Authorization','bearer dGhlc2VjcmV0dG9rZW4=')
-        .expect(200)
+        .expect(202)
         .end((err, res)=>{
-            console.log(err);
-            assert.equal(true,err===null);
-            console.log(res.text);
-            // assert.equal(`{"error":"token not provided"}`, res.text);
+            assert.equal(true, err===null);
+            const result = JSON.parse(res.text);
+            assert.strictEqual('request recieved and processing', result.message);
         });
-    });
+   });
 });
