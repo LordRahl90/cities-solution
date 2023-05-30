@@ -11,6 +11,6 @@ describe("should perform distance calculation", () => {
     const long2 = -172.744857;
 
     const result = calculator.distance(lat1, lat2, long1, long2);
-    console.log(result);
+    assert.strictEqual(13376.38, parseFloat(result.toFixed(2)));
   });
 });

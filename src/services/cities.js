@@ -9,7 +9,6 @@ class Cities {
   resultMap = new Map();
   calculator = new Calculator();
   requestStatus = {};
-  //   expectedID = '2152f96f-50c7-4d76-9e18-f7033bd14428';
 
   constructor(endpoint) {
     https.get(endpoint, (response) => {
@@ -83,7 +82,6 @@ class Cities {
 
   // retrieve all the cities that are within the given distance
   citiesByDistance(from, distance, requestID) {
-    console.log('doing things by distance');
     this.requestStatus.requestID = "pending";
     this.citiesMap.forEach((cm) => {
       const result = this.calculateDistance(from, cm.guid);

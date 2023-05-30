@@ -1,40 +1,18 @@
 const https = require("https");
 const express = require("express");
 const bodyParser = require("body-parser");
+
 const Cities = require("./services/cities");
 const bearerMW = require("./middlewares/bearer");
 
 const endpoint =
   "https://raw.githubusercontent.com/gandevops/backend-code-challenge/master/addresses.json";
 const app = express();
-const citiesMap = new Map();
-const cityTags = new Map();
 const cities = new Cities(endpoint);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bearerMW);
-
-// load all cities to memory
-https.get(endpoint, (response) => {
-  const chunk = [];
-  response.on("data", (data) => {
-    chunk.push(data);
-  });
-  response.on("end", () => {
-    const jsonData = JSON.parse(Buffer.concat(chunk).toString());
-    jsonData.map((c) => {
-      citiesMap.set(c.guid, c);
-      c.tags.map((t) => {
-        if (!cityTags.has(t)) {
-          cityTags.set(t, [c.guid]);
-          return;
-        }
-        cityTags.get(t).push(c.guid);
-      });
-    });
-  });
-});
 
 app.get("/cities-by-tag", (req, res) => {
   const { tag, isActive } = req.query;
@@ -59,7 +37,7 @@ app.get("/distance", (req, res) => {
 app.get("/area", (req, res) => {
   const { from, distance } = req.query;
 
-  // this should be auto-generated
+  // this wil be auto-generated and sent to the client
   let requestID = "2152f96f-50c7-4d76-9e18-f7033bd14428";
 
   const resultURL = `${req.protocol}://${req.header(
@@ -69,7 +47,6 @@ app.get("/area", (req, res) => {
     resultsUrl: resultURL,
     message: "request recieved and processing",
   });
-  console.log("child process triggered");
   cities.citiesByDistance(from, distance, requestID);
 });
 

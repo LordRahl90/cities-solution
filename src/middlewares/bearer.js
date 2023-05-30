@@ -9,6 +9,12 @@ const bearer = (req, res, next) => {
     res.status(401).json({ error: "not authorized" });
     return;
   }
+  try {
+    atob(auth[1]);
+  } catch (e) {
+    res.status(401).json({error: e.message});
+    return;
+  }
   next();
 };
 
